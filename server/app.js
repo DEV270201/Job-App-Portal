@@ -4,6 +4,8 @@ const app = express();
 //Using middlewares
 app.use(express.json());
 
+app.use('/api/v1/application')
+
 //Global error middleware
 app.use((error,req,res,next)=>{
     let err = {...error};
