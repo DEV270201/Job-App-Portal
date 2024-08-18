@@ -3,7 +3,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-     await queryInterface.createTable('Applicants', { 
+    await queryInterface.createTable('Applicants', { 
       id : {
         primaryKey: true,
         type: Sequelize.INTEGER,
@@ -33,7 +33,15 @@ module.exports = {
      resume: {
         type: Sequelize.TEXT,
         allowNull: false
-     }
+     },
+     createdAt: {
+      type: Sequelize.DATE,
+      defaultValue: Sequelize.NOW,
+     },
+     updatedAt: {
+      type: Sequelize.DATE,
+      defaultValue: Sequelize.NOW,
+     },
     });
   },
 

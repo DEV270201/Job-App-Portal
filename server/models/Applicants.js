@@ -34,6 +34,7 @@ const applicantSchema = connection.define('Applicant', {
  }
 }, {
  tableName: 'Applicants',
+ timestamp: true
 });
 
 
