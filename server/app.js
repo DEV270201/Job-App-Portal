@@ -22,7 +22,7 @@ app.use((error,req,res,next)=>{
          err = {...error};
     }
     else if(error.code === 'LIMIT_FILE_SIZE'){
-        err = new AppError([`${error.field} : File too large`])
+        err = new AppError([`${error.field} : File too large`],400);
     }
     else if(!error.isOperational && error.errors){
         err = handleError({...error});

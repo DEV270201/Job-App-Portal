@@ -2,26 +2,17 @@ const multer = require('multer');
 const path = require("path"); 
 const AppError = require('./Error');
 
-var storage = multer.diskStorage({
-    destination: function(req,file,call_back){
-        call_back(null, `${__dirname}/Documents`);
-    },
-    filename: function(req,file,call_back){
-        console.log("file : ",file);
-        req.fileName = Date.now() + path.extname(file.originalname);
-        call_back(null, req.fileName );   //setting the new file name stored in the upload file
-    }
- });
+var storage = multer.memoryStorage();
 
 const file_filter = (req, file, cb)=>{
-    let extensions = /pdf|docx/;
+    let extensions = /pdf/;
 
     const extname =  extensions.test(path.extname(file.originalname).toLowerCase());
    
     if(extname){
         return cb(null,true);
     } else {
-        cb(new AppError(['Please upload pdf/docx only!'],400));
+        cb(new AppError(['Please upload pdf only!'],400));
     }
 }
  

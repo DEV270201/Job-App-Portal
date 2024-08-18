@@ -1,15 +1,34 @@
 const Applicant = require("../models/Applicants");
+const S3Client = require('../utils/S3Client');
+const {PutObjectCommand} = require('@aws-sdk/client-s3');
 
 exports.Submit = async (req, res, next) => {
   try {
+    
+    console.log("hehhee");
+    let Bucket = process.env.AWS_S3_BUCKET;
+    let Region = process.env.AWS_S3_REGION;
+    let Key = Date.now() + req.file.originalname;
 
-    console.log(req.body);
+    console.log("file : ",req.file);
+
+    const data = await S3Client.send(
+      new PutObjectCommand({
+        Body: req.file.buffer,
+        Bucket,
+        ContentType: 'application/pdf',
+        Key
+      })
+    );
+
+    console.log("data received from s3 : ",data);
+    let link = `https://${Bucket}.s3.${Region}.amazonaws.com/${Key}`
 
     const applicant = await Applicant.create({
         name: req.body.name,
         city: req.body.city,
         majors: req.body.majors,
-        resume: req.fileName,
+        resume: link,
         bio: req.body.bio,
         gender: req.body.gender
     });
@@ -18,7 +37,7 @@ exports.Submit = async (req, res, next) => {
 
     return res.status(201).json({
       success: true,
-      message: "Successfully registered",
+      message: "Your application was successfull!",
     });
 
   } catch (err) {
