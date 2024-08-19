@@ -16,4 +16,12 @@
   ::-webkit-scrollbar-thumb {
     background: #888;
   }
+
+  .active-route {
+    @apply font-bold flex flex-row space-x-2 text-white text-xl bg-dark-100 transition delay-100 duration-100 ease-in-out py-2 px-3 rounded-xl cursor-pointer;
+  }
+
+  .inactive-route {
+    @apply flex flex-row space-x-2 hover:bg-dark-100 text-gray-400 text-xl font-medium py-2 px-3 rounded-xl cursor-pointer;
+  }
 }

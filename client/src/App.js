@@ -4,15 +4,19 @@ import { BrowserRouter as Router } from "react-router-dom";
 import EligibilityPage from "./pages/EligibilityPage";
 import ApplicationPage from "./pages/ApplicationPage";
 import ApplicantsPage from "./pages/Applicants";
+import Home from "./pages/Home";
+import Process from "./pages/Process";
 
 function App() {
   return (
     <>
       <Router>
           <Routes>
-            <Route exact path="/eligibility" element={<EligibilityPage />} />
-            <Route exact path="/application" element={<ApplicationPage />} />
-            <Route exact path='/applicants' element={<ApplicantsPage />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/process" element={<Process />} />
+            <Route path="/eligibility" element={<EligibilityPage />} />
+            <Route path="/application" element={<ApplicationPage />} />
+            <Route path='/applicants' element={<ApplicantsPage />} />
           </Routes>
       </Router>
     </>

@@ -20,23 +20,21 @@ const ApplicantsPage = () => {
 
   const fetchData = async () => {
     try {
-
-      setInfo((obj)=>{
-        return {...obj,load:true}
+      setInfo((obj) => {
+        return { ...obj, load: true };
       });
 
-      let resp = await axios.get('http://127.0.0.1:3001/api/v1/application');
+      let resp = await axios.get("http://127.0.0.1:3001/api/v1/application");
 
       setData(resp.data.data);
 
       setInfo({
-        load:false,
-        error:''
+        load: false,
+        error: "",
       });
-
-    }catch (err) {
+    } catch (err) {
       console.log("Error : ", err);
-      console.log("set nai ho rha...")
+      console.log("set nai ho rha...");
       setInfo({
         load: false,
         error: "Sorry, something went wrong!",
@@ -56,15 +54,15 @@ const ApplicantsPage = () => {
           List of all the applicants :
         </div>
         <div className="flex justify-center">
-          <div className="py-4 h-full text-white overflow-x-auto grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-3 gap-y-3">
-            {info.load ? (
-              <div className="text-white text-xl lg:text-2xl">Loading...</div>
-            ) : data.length === 0 ? (
-              <div className="text-white text-xl lg:text-2xl w-full bg-fuchsia-500">
-                No applicants have applied for this position...
-              </div>
-            ) : (
-              data.map((applicant) => (
+          {info.load ? (
+            <div className="text-white text-xl lg:text-2xl">Loading...</div>
+          ) : data.length === 0 ? (
+            <div className="text-white text-xl lg:text-2xl my-2">
+              No applicants have applied for this position...
+            </div>
+          ) : (
+            <div className="py-4 h-full text-white overflow-x-auto grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-3 gap-y-3 w-full">
+              {data.map((applicant) => (
                 <ApplicantCard
                   id={applicant.id}
                   name={applicant.name}
@@ -74,9 +72,9 @@ const ApplicantsPage = () => {
                   resume={applicant.resume}
                   key={applicant.id}
                 />
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </>

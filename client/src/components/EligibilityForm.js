@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import TextInput from "./Input/TextInput";
 import SelectInput from "./Input/SelectInput";
 
@@ -163,6 +163,13 @@ const EligibilityForm = () => {
             ? ""
             : `Sorry, You are not eligible because: ${text}`}
         </div>
+
+        <p className="mt-1 text-white">
+        Back To Home : 
+        <Link className="ml-2 text-primary-blue" to="/">
+          Here
+        </Link>
+      </p>
       </div>
     </>
   );
