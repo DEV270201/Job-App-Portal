@@ -12,7 +12,7 @@ const file_filter = (req, file, cb)=>{
     if(extname){
         return cb(null,true);
     } else {
-        cb(new AppError(['Please upload pdf only!'],400));
+        cb(new AppError({file: 'Please upload pdf only!'},400));
     }
 }
  

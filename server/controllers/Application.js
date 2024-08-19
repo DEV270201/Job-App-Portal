@@ -5,7 +5,6 @@ const {PutObjectCommand} = require('@aws-sdk/client-s3');
 exports.Submit = async (req, res, next) => {
   try {
     
-    console.log("hehhee");
     let Bucket = process.env.AWS_S3_BUCKET;
     let Region = process.env.AWS_S3_REGION;
     let Key = Date.now() + req.file.originalname;
@@ -50,8 +49,6 @@ exports.getApplicants = async (req, res, next) => {
   try {
 
     const applicants = await Applicant.findAll();
-
-    console.log("applicants : ",applicants);
 
     return res.status(200).json({
       success: true,
