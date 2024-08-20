@@ -1,50 +1,31 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useEffect } from "react";
 import ApplicantCard from "../components/ApplicantCard";
+import useFetch from "../hooks/useFetch";
 
 const ApplicantsPage = () => {
-  const [data, setData] = useState([
-    {
-      id: "",
-      name: "",
-      city: "",
-      majors: "",
-      bio: "",
-      resume: "",
-    },
-  ]);
-  const [info, setInfo] = useState({
-    error: "",
-    load: false,
+
+  let {fetchData,respData,errors,load} = useFetch({
+    url: 'application',
   });
 
-  const fetchData = async () => {
-    try {
-      setInfo((obj) => {
-        return { ...obj, load: true };
-      });
-
-      let resp = await axios.get("http://127.0.0.1:3001/api/v1/application");
-
-      setData(resp.data.data);
-
-      setInfo({
-        load: false,
-        error: "",
-      });
-    } catch (err) {
-      console.log("Error : ", err);
-      console.log("set nai ho rha...");
-      setInfo({
-        load: false,
-        error: "Sorry, something went wrong!",
-      });
-    }
-  };
-
   useEffect(() => {
-    fetchData();
-  }, []);
+    console.log("data : ",respData);
+    console.log("errors : ",errors);
+    console.log("load : ",load);
+  }, [respData,errors,load]);
+
+  const getData = async ()=> {
+    await fetchData();
+  }
+
+  useEffect(()=>{
+    console.log("applicant mounted...");
+    getData();
+    
+    return(()=>{
+      console.log('applicant unmounted...');
+    })
+  },[]);
 
   return (
     <>
@@ -54,15 +35,19 @@ const ApplicantsPage = () => {
           List of all the applicants :
         </div>
         <div className="flex justify-center">
-          {info.load ? (
+          {load ? (
             <div className="text-white text-xl lg:text-2xl">Loading...</div>
-          ) : data.length === 0 ? (
+          ) : errors.system ? (
+            <div className="text-white text-xl lg:text-2xl">{errors.system}</div>
+          )
+          :
+          respData.length === 0 ? (
             <div className="text-white text-xl lg:text-2xl my-2">
               No applicants have applied for this position...
             </div>
           ) : (
             <div className="py-4 h-full text-white overflow-x-auto grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-3 gap-y-3 w-full">
-              {data.map((applicant) => (
+              {respData.map((applicant) => (
                 <ApplicantCard
                   id={applicant.id}
                   name={applicant.name}

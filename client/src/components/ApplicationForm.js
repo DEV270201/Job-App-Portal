@@ -1,11 +1,12 @@
-import React, { useState,useRef } from "react";
-import axios from 'axios';
+import React, { useState,useRef,useEffect } from "react";
 import TextInput from "./Input/TextInput";
 import SelectInput from "./Input/SelectInput";
 import TextAreaInput from "./Input/TextAreaInput";
 import FileInput from "./Input/FileInput";
+import useFetch from "../hooks/useFetch";
 
 const ApplicationForm = () => {
+  // formData 
   let [data, setData] = useState({
     name: "",
     majors: "Business Analytics",
@@ -13,17 +14,34 @@ const ApplicationForm = () => {
     bio: "",
     city: "Atlantic City",
   });
-
+  // validation error msgs on client 
   let [msg, setMessages] = useState({
     name: "",
     bio: "",
     file: "",
     system: "",
-    status:""
   });
-
+  // file ref 
   const fnref = useRef(null);
-  const [load,setLoad] = useState(false);
+  //custom hook for fetching data
+  let {fetchData,errors,load,respData} = useFetch({
+    url: 'application',
+    method: 'post',
+    isFile: true
+  })
+
+  useEffect(()=>{
+    if(respData?.success){
+      setData({
+        name: "",
+        majors: "Business Analytics",
+        gender: "Female",
+        bio: "",
+        city: "Atlantic City"
+      })
+    }
+  },[respData]);
+
 
   const updateInfo = (event) => {
     const { name, value } = event.target;
@@ -39,20 +57,22 @@ const ApplicationForm = () => {
       let areErrors = false;
       const nameRegex = /^[a-zA-Z]+$/;
       if(!data.name || data.name.trim().length > 30 || !nameRegex.test(data.name)){
-          msg.name = 'Required. Maximum 30 characters and only alphabets.'
+          msg.name = 'Required. Maximum 30 characters and only alphabets.';
           areErrors = true;
       }
       if(data.bio.length > 300){
-          msg.bio = 'Length exceeded.'
+          msg.bio = 'Length exceeded.';
           areErrors = true;
+      }
+      if(!fnref.current.files[0]){
+        msg.file = 'File not selected.';
+        areErrors = true;
       }
       
       return areErrors ? msg : false;
   }
 
   const applyNow = async () => {
-     try{
-        console.log("current : ",fnref.current.files[0]);
         let result = validateForm(data);
         if(result){
              setMessages(result);
@@ -68,54 +88,7 @@ const ApplicationForm = () => {
           city: data.city
         };
   
-        setLoad(true);
-        let res = await axios.post(
-          "http://127.0.0.1:3001/api/v1/application",
-          postData,
-          {
-            headers: {
-                "Content-Type": "multipart/form-data"
-            }
-          }
-        );
-
-        console.log("RESSSSSULTT : ", res);
-     
-        setMessages({
-          name: "",
-          bio: "",
-          file: "",
-          system: "",
-          status: "Your Application was successfull!"
-        })
-
-     }catch(err){
-
-        console.log("Error : ",err);
-        if(err.response.data.errors)
-           setMessages(err.response.data.errors);
-        else
-           setMessages({
-            name: "",
-            bio: "",
-            file: "",
-            system: "Sorry, something went wrong!",
-            status: ""
-          });  
-
-      }finally{
-
-       setData({
-           name: "",
-           majors: "Business Analytics",
-           gender: "Female",
-           bio: "",
-           city: "Atlantic City",
-         })
-         setLoad(false);
-         fnref.current.value = null;
-
-     }
+        await fetchData(postData);  
   }
 
   return (
@@ -131,7 +104,7 @@ const ApplicationForm = () => {
         title={'Name'}
         type={'text'}
         data={data.name}
-        errorMsg={msg.name}
+        errorMsg={errors ? errors.name : msg.name}
         required={true}
         updateInfo={updateInfo}
         />
@@ -183,7 +156,7 @@ const ApplicationForm = () => {
         data={data.bio}
         updateInfo={updateInfo}
         info={`${data.bio.trim().length} / 300`}
-        errorMsg={msg.bio}
+        errorMsg={errors ? errors.bio : msg.bio}
         />
 
          {/* Resume */}
@@ -191,17 +164,18 @@ const ApplicationForm = () => {
           id={'file'}
           title={'Resume'}
           info={'Upto 10 MB'}
-          errorMsg={msg.file}
+          errorMsg={errors ? errors.file : msg.file}
           required={true}
           ref={fnref}
          />
 
-        <div className="text-red-600 font-medium text-lg my-1 flex-1">{msg.system}</div>
-        <div className="text-green-600 font-medium text-lg my-1 flex-1">{msg.status}</div>
+        <div className="text-red-600 font-medium text-lg my-1 flex-1">{errors ? errors.system : msg.system}</div>
+        <div className="text-green-600 font-medium text-lg my-1 flex-1">{respData.success ? respData.message : ''}</div>
 
         {/* Apply */}
         <div className="">
           <button
+            disabled={load ? true : false}
             className="w-1/4 flex justify-center py-2 px-2 rounded-md text-sm md:text-lg font-medium text-black bg-white hover:bg-secondary-blue hover:text-white"
             onClick={applyNow}
           >

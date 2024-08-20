@@ -35,8 +35,10 @@ exports.Submit = async (req, res, next) => {
     console.log(applicant.toJSON());
 
     return res.status(201).json({
-      success: true,
-      message: "Your application was successfull!",
+      data: {
+        success: true,
+        message: "Your application was successfull!",
+      }
     });
 
   } catch (err) {
