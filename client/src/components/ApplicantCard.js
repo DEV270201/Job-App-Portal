@@ -19,7 +19,7 @@ const ApplicantCard = ({
             <div className="text-black font-medium text-base mb-1">{city}</div>
             <div className="text-white text-sm">Majors :</div>
             <div className="text-black font-medium text-base mb-1">{majors}</div>
-            <div className="text-white text-sm">Bio :</div>
+            <div className="text-white text-sm">Candidate's Bio :</div>
             <div className="text-black font-medium text-base mb-1 h-14 overflow-y-auto">{bio.length === 0 ? 'No Bio.' : bio}</div>
             <a href={resume} target="_blank">
             <div
