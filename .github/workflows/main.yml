@@ -11,5 +11,5 @@ jobs:
     steps:
       - name: Echo the environment variable
         run: |
-          echo "MY_ENV_VAR is: $MY_ENV_VAR"
+          echo MY_ENV_VAR is: $MY_ENV_VAR
           echo Secret: ${{secrets.MY_SECRET}}
