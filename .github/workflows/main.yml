@@ -1,0 +1,15 @@
+name: Manual Echo Workflow
+
+on:
+  workflow_dispatch:
+
+jobs:
+  echo-job:
+    runs-on: ubuntu-latest
+    env:
+      MY_ENV_VAR: ${{ secrets.MY_SECRET }}
+    steps:
+      - name: Echo the environment variable
+        run: |
+          echo "MY_ENV_VAR is: $MY_ENV_VAR"
+          echo Secret: ${{secrets.MY_SECRET}}
