@@ -112,11 +112,6 @@ jobs:
       - name: Show the file that came from another job
         run: cat build-info.txt
 
-      # Repo/Org "Variables" (Settings > Secrets and variables > Actions > Variables)
-      # are referenced via the `vars` context — different from `env`.
-      - name: Use a repository-level Variable
-        run: echo "Repo variable: ${{ vars.SOME_REPO_VARIABLE }}"
-
       # Secrets are referenced via the `secrets` context. Never echo
       # real secrets in logs in practice — this is just illustrating access.
       - name: Use a Secret (masked in logs automatically)
