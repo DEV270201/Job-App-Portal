@@ -1,0 +1,144 @@
+name: Learn Variables & Data Passing
+
+# ─────────────────────────────────────────────────────────────
+# WORKFLOW-LEVEL env: available to EVERY job and EVERY step
+# in this entire workflow file.
+# ─────────────────────────────────────────────────────────────
+env:
+  WORKFLOW_LEVEL_VAR: "I'm visible everywhere in this workflow"
+  APP_NAME: "demo-app"
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+
+  # ═══════════════════════════════════════════════════════════
+  # JOB 1: build
+  # Demonstrates: job-level env, step-level env, GITHUB_ENV
+  # (step → step), GITHUB_OUTPUT (step → step, and job → job)
+  # ═══════════════════════════════════════════════════════════
+  build:
+    runs-on: ubuntu-latest
+
+    # JOB-LEVEL env: available to every step in THIS job only.
+    # Other jobs (e.g. `deploy` below) cannot see this.
+    env:
+      JOB_LEVEL_VAR: "I'm visible only within the 'build' job"
+
+    # This is how a JOB exposes data to OTHER jobs.
+    # The values come from step outputs (see step ids below).
+    outputs:
+      build-version: ${{ steps.set-version.outputs.version }}
+      build-time: ${{ steps.set-version.outputs.built_at }}
+
+    steps:
+
+      # ── STEP-LEVEL env: only visible inside THIS step ──────
+      - name: Step with its own env var
+        env:
+          STEP_LEVEL_VAR: "I only exist in this single step"
+        run: |
+          echo "Workflow var: $WORKFLOW_LEVEL_VAR"
+          echo "Job var:      $JOB_LEVEL_VAR"
+          echo "Step var:     $STEP_LEVEL_VAR"
+
+      - name: Try to use STEP_LEVEL_VAR here (it will be empty)
+        run: |
+          echo "STEP_LEVEL_VAR outside its step = '$STEP_LEVEL_VAR'"
+          # ^ prints empty — step-level env does NOT leak to other steps
+
+      # ── Passing a plain env var from step -> LATER steps ────
+      # Write to the special $GITHUB_ENV file. Anything appended
+      # there becomes an env var for every subsequent step in
+      # THIS job (not other jobs).
+      - name: Create a variable and export it to later steps
+        run: |
+          echo "SHARED_TOKEN=abc123" >> "$GITHUB_ENV"
+          echo "TIMESTAMP=$(date +%s)" >> "$GITHUB_ENV"
+
+      - name: Use the variable exported above
+        run: |
+          echo "SHARED_TOKEN is: $SHARED_TOKEN"
+          echo "TIMESTAMP is:    $TIMESTAMP"
+
+      # ── Passing a STRUCTURED output step -> step (same job) ─
+      # $GITHUB_OUTPUT lets a step define named outputs that can
+      # be referenced as steps.<id>.outputs.<name> — usable in
+      # later steps AND exposed at job level (see `outputs:` above)
+      - name: Set version output
+        id: set-version          # <-- the id is how we reference this step
+        run: |
+          VERSION="1.0.$GITHUB_RUN_NUMBER"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "built_at=$(date -u +%FT%TZ)" >> "$GITHUB_OUTPUT"
+
+      - name: Consume that output in a later step (same job)
+        run: |
+          echo "Version from previous step: ${{ steps.set-version.outputs.version }}"
+
+      # ── Passing FILES between jobs: use artifacts ───────────
+      - name: Create a file to hand off to another job
+        run: echo "built by ${{ env.APP_NAME }}" > build-info.txt
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-info
+          path: build-info.txt
+
+
+  # ═══════════════════════════════════════════════════════════
+  # JOB 2: test
+  # Demonstrates: `needs` to read another job's outputs,
+  # matrix + env, and repo/environment-level Variables & Secrets
+  # ═══════════════════════════════════════════════════════════
+  test:
+    needs: build                     # <-- required to access build.outputs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read outputs from the build job
+        run: |
+          echo "Version built:  ${{ needs.build.outputs.build-version }}"
+          echo "Built at:       ${{ needs.build.outputs.build-time }}"
+
+      - name: Download the artifact produced by build
+        uses: actions/download-artifact@v4
+        with:
+          name: build-info
+
+      - name: Show the file that came from another job
+        run: cat build-info.txt
+
+      # Repo/Org "Variables" (Settings > Secrets and variables > Actions > Variables)
+      # are referenced via the `vars` context — different from `env`.
+      - name: Use a repository-level Variable
+        run: echo "Repo variable: ${{ vars.SOME_REPO_VARIABLE }}"
+
+      # Secrets are referenced via the `secrets` context. Never echo
+      # real secrets in logs in practice — this is just illustrating access.
+      - name: Use a Secret (masked in logs automatically)
+        env:
+          MY_SECRET: ${{ secrets.SOME_SECRET }}
+        run: echo "Secret length check only, not printing value"
+
+
+  # ═══════════════════════════════════════════════════════════
+  # JOB 3: deploy
+  # Demonstrates: needs on MULTIPLE jobs, and that job-level /
+  # step-level env from `build` does NOT leak here.
+  # ═══════════════════════════════════════════════════════════
+  deploy:
+    needs: [build, test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Confirm isolation of job-level vars
+        run: |
+          echo "Workflow var (still visible): $WORKFLOW_LEVEL_VAR"
+          echo "Build job's JOB_LEVEL_VAR here = '$JOB_LEVEL_VAR'"
+          # ^ empty, because job-level env from `build` is NOT inherited by `deploy`
+
+      - name: Use build output one more time
+        run: echo "Deploying version ${{ needs.build.outputs.build-version }}"
