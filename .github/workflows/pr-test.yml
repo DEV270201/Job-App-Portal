@@ -1,0 +1,45 @@
+name: Pull request testing code beofre merge
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'server/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install dependencies (server)
+        working-directory: ./server
+        run: npm ci
+
+      - name: Run tests (server)
+        working-directory: ./server
+        run: npm test 2>&1 | tee test-output.log
+        continue-on-error: true
+        id: run-tests
+
+      - name: Add test results to summary
+        if: always()
+        working-directory: ./server
+        run: |
+          echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat test-output.log >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail job if tests failed
+        if: steps.run-tests.outcome == 'failure'
+        run: exit 1
