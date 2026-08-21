@@ -23,7 +23,9 @@ jobs:
 
       - name: Install dependencies (server)
         working-directory: ./server
-        run: npm ci
+        run: |
+            echo "The file contents: $(ls -l)"
+            npm install
 
       - name: Run tests (server)
         working-directory: ./server
