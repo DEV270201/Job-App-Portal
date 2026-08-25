@@ -1,10 +1,8 @@
-name: Pull request testing code beofre merge
+name: Pull request testing code before merge
 
 on:
   pull_request:
     branches: [ main ]
-    paths:
-      - 'server/**'
 
 jobs:
   test:
@@ -13,8 +11,22 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for server changes
+        id: check
+        run: |
+          if git diff --name-only ${{ github.event.pull_request.base.sha || 'HEAD~1' }} ${{ github.sha }} | grep -qE '^(server/|\.github/workflows/)'; then
+            echo "Server files changed, continuing..."
+            echo "SKIP=false" >> "$GITHUB_ENV"
+          else
+            echo "No server changes, skipping remaining steps."
+            echo "SKIP=true" >> "$GITHUB_ENV"
+          fi
 
       - name: Use Node.js 18
+        if: ${{ env.SKIP != 'true' }}
         uses: actions/setup-node@v4
         with:
           node-version: '18'
@@ -22,19 +34,21 @@ jobs:
           cache-dependency-path: server/package-lock.json
 
       - name: Install dependencies (server)
+        if: ${{ env.SKIP != 'true' }}
         working-directory: ./server
         run: |
             echo "The file contents: $(ls -l)"
             npm install
 
       - name: Run tests (server)
+        if: ${{ env.SKIP != 'true' }}
         working-directory: ./server
         run: npm test 2>&1 | tee test-output.log
         continue-on-error: true
         id: run-tests
 
       - name: Add test results to summary
-        if: always()
+        if: ${{ env.SKIP != 'true' }}
         working-directory: ./server
         run: |
           echo "## Test Results" >> $GITHUB_STEP_SUMMARY
@@ -43,5 +57,5 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Fail job if tests failed
-        if: steps.run-tests.outcome == 'failure'
+        if: env.SKIP != 'true' && steps.run-tests.outcome == 'failure'
         run: exit 1
